@@ -1,0 +1,30 @@
+{
+  "name": "puzzle15",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@unocss/reset": "^0.57.2",
+    "@unocss/transformer-directives": "^0.57.2",
+    "axios": "^1.6.1",
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.0",
+    "vue": "^3.3.4",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@iconify-json/material-symbols": "^1.1.61",
+    "@unocss/preset-icons": "^0.57.3",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "naive-ui": "^2.35.0",
+    "unocss": "^0.57.2",
+    "unplugin-auto-import": "^0.16.7",
+    "unplugin-vue-components": "^0.25.2",
+    "vite": "^4.4.5"
+  }
+}
