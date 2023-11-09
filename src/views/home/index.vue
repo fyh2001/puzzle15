@@ -71,7 +71,6 @@ const interval = ref(0); // 间隔时间
 const time = computed(() => {
   if (isStart.value) {
     const millisecond = interval.value % 1000;
-    console.log(millisecond);
     const second = parseInt(interval.value / 1000) % 60;
     const minute = parseInt(interval.value / 1000 / 60) % 60;
 
