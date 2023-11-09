@@ -40,6 +40,7 @@
 </template>
 
 <script setup>
+import { c } from "naive-ui";
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
 
@@ -54,7 +55,7 @@ const gameMap = ref([
 ]);
 
 // 哈希表
-const gameHashMap = ref(createHashMap(gameMap.value));
+const gameHashMap = ref(null);
 
 // 分组
 const redGroup = [1, 2, 3, 4, 5, 9, 13];
@@ -66,7 +67,7 @@ const step = ref(0);
 // 时间
 let timer = null;
 let startTime = 0; // 开始时间
-let endTime = 0; // 结束时间
+let endTime = ref(0); // 结束时间
 const interval = ref(0); // 间隔时间
 const time = computed(() => {
   if (isStart.value) {
@@ -84,11 +85,10 @@ const time = computed(() => {
         : millisecond
     }`;
   }
-
   if (isWin.value) {
-    const millisecond = (endTime - startTime) % 1000;
-    const second = parseInt((endTime - startTime) / 1000) % 60;
-    const minute = parseInt((endTime - startTime) / 1000 / 60) % 60;
+    const millisecond = (endTime.value - startTime) % 1000;
+    const second = parseInt((endTime.value - startTime) / 1000) % 60;
+    const minute = parseInt((endTime.value - startTime) / 1000 / 60) % 60;
 
     return `${minute < 10 ? "0" + minute : minute}:${
       second < 10 ? "0" + second : second
@@ -109,20 +109,7 @@ const isStart = ref(false);
 // 是否打乱
 const isScramble = ref(false);
 // 是否胜利
-const isWin = computed(() => {
-  if (
-    gameMap.value
-      .flat()
-      .slice(0, 15)
-      .every((item, index) => item === index + 1) &&
-    isStart.value
-  ) {
-    clearInterval(timer);
-    return true;
-  }
-
-  return false;
-});
+const isWin = ref(false);
 
 /**
  * 获取单元格样式
@@ -221,7 +208,7 @@ const clickRules = (row, column) => {
  * @param {number[][]} arr 二维数组
  * @returns {Map<number, {row: number, column: number}>} 哈希表
  */
-function createHashMap(arr) {
+const createHashMap = (arr) => {
   const hashMap = new Map();
   for (let i = 0; i < arr.length; i++) {
     for (let j = 0; j < arr[i].length; j++) {
@@ -232,7 +219,7 @@ function createHashMap(arr) {
     }
   }
   return hashMap;
-}
+};
 
 /**
  * 触摸
@@ -249,10 +236,18 @@ const onTouch = (rowIndex, itemIndex) => {
 
   clickRules(rowIndex, itemIndex);
 
-  if (isWin.value) {
-    isStart.value = false;
-    endTime = new Date().getTime();
+  // 判断是否胜利
+  if (
+    gameMap.value
+      .flat()
+      .slice(0, 15)
+      .every((item, index) => item === index + 1) &&
+    isStart.value
+  ) {
     clearInterval(timer);
+    isStart.value = false;
+    endTime.value = new Date().getTime();
+    isWin.value = true;
   }
 };
 
@@ -293,6 +288,7 @@ const scramble = () => {
   if (isStart.value || isWin.value) {
     clearInterval(timer);
     isStart.value = false;
+    isWin.value = false;
     step.value = 0;
   }
 
@@ -323,5 +319,7 @@ const timeStart = () => {
   }, 10);
 };
 
-onMounted(() => {});
+onMounted(() => {
+  gameHashMap.value = createHashMap(gameMap.value);
+});
 </script>
