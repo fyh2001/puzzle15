@@ -229,8 +229,6 @@ function createHashMap(arr) {
       hashMap.set(arr[i][j], {
         row: i,
         column: j,
-        // offsetLeft: gameMapRef.value.children[i].children[j].offsetLeft,
-        // offsetTop: gameMapRef.value.children[i].children[j].offsetTop,
       });
     }
   }
