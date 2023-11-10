@@ -4,7 +4,7 @@
 
     <div class="grid gap-2 p-1 rounded-md">
       <div
-        class="grid grid-cols-4 gap-2 "
+        class="grid grid-cols-4 gap-2"
         v-for="(row, rowIndex) in gameMap"
         :key="rowIndex"
       >
@@ -16,7 +16,7 @@
           @click="onTouch(rowIndex, itemIndex)"
         >
           {{ item }}
-        </div> 
+        </div>
       </div>
     </div>
 
@@ -39,11 +39,61 @@
   </div>
 </template>
 
+<script>
+/**
+ * 创建哈希表
+ * @param {number[][]} arr 二维数组
+ * @returns {Map<number, {row: number, column: number}>} 哈希表
+ */
+const createHashMap = (arr) => {
+  const hashMap = new Map();
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < arr[i].length; j++) {
+      hashMap.set(arr[i][j], {
+        row: i,
+        column: j,
+      });
+    }
+  }
+  return hashMap;
+};
+
+/**
+ * 判断是否可解
+ * @param {number[][]} numsMap 二维数组
+ * @returns {boolean} 是否可解
+ */
+const isSolvable = (numsMap) => {
+  // 判断是否可解,计算逆序数,偶数可解
+  // let count = 0;
+  // for (let i = 0; i < numsMap.length; i++) {
+  //   for (let j = i + 1; j < numsMap.length; j++) {
+  //     if (numsMap[i] > numsMap[j]) {
+  //       count++;
+  //     }
+  //   }
+  // }
+  let sum = 0;
+  for (let i = 0; i < 16; i++) {
+    if (numsMap[i] === null) {
+      sum += parseInt(i / 4) + ((i + 1) % 4);
+      continue;
+    }
+    for (let j = 0; j < 16 - i; j++) {
+      if (numsMap[j + i] < numsMap[i]) {
+        sum++;
+      }
+    }
+  }
+  return sum % 2 === 0;
+};
+</script>
+
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
 import { useRecordStore } from "../../store/recordStore";
-import { formatDurationInGame } from "@/utils/time.js"
+import { formatDurationInGame } from "@/utils/time.js";
 
 const recordStore = useRecordStore();
 
@@ -56,12 +106,12 @@ const gameMap = ref([
 ]);
 
 // 哈希表
-const gameHashMap = ref(null);
+const gameHashMap = ref(createHashMap(gameMap.value));
 
 // 分组
-const redGroup = [1, 2, 3, 4, 5, 9, 13];
-const blueGroup = [6, 7, 8, 10, 14];
-const yellowGroup = [11, 12, 15];
+const redGroup = new Set([1, 2, 3, 4, 5, 9, 13]);
+const blueGroup = new Set([6, 7, 8, 10, 14]);
+const yellowGroup = new Set([11, 12, 15]);
 
 // 步数
 const step = ref(0);
@@ -71,13 +121,8 @@ let startTime = 0; // 开始时间
 let endTime = ref(0); // 结束时间
 const interval = ref(0); // 间隔时间
 const time = computed(() => {
-  if (isStart.value) {
-    return formatDurationInGame(interval.value)
-  }
-
-  if (isWin.value) {
-    return formatDurationInGame(endTime.value - startTime)
-  }
+  if (isStart.value) return formatDurationInGame(interval.value);
+  if (isWin.value) return formatDurationInGame(endTime.value - startTime);
   return "00:00:000";
 });
 
@@ -94,13 +139,9 @@ const isWin = ref(false);
  * @returns {string} 样式类名
  */
 const getCellClass = (itemValue) => {
-  if (redGroup.includes(itemValue)) {
-    return "bg-red-4 shadow";
-  } else if (blueGroup.includes(itemValue)) {
-    return "bg-blue-4 shadow";
-  } else if (yellowGroup.includes(itemValue)) {
-    return "bg-yellow-4 shadow";
-  }
+  if (redGroup.has(itemValue)) return "bg-red-4 shadow";
+  if (blueGroup.has(itemValue)) return "bg-blue-4 shadow";
+  if (yellowGroup.has(itemValue)) return "bg-yellow-4 shadow";
   return "";
 };
 
@@ -111,9 +152,7 @@ const getCellClass = (itemValue) => {
  */
 const clickRules = (row, column) => {
   const item = gameMap.value[row][column];
-  if (item === null) {
-    return;
-  }
+  if (item === null) return;
 
   // 获取点击的单元格的坐标
   const itemRow = row;
@@ -181,24 +220,6 @@ const clickRules = (row, column) => {
 };
 
 /**
- * 创建哈希表
- * @param {number[][]} arr 二维数组
- * @returns {Map<number, {row: number, column: number}>} 哈希表
- */
-const createHashMap = (arr) => {
-  const hashMap = new Map();
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = 0; j < arr[i].length; j++) {
-      hashMap.set(arr[i][j], {
-        row: i,
-        column: j,
-      });
-    }
-  }
-  return hashMap;
-};
-
-/**
  * 触摸
  * @param {number} rowIndex 行
  * @param {number} itemIndex 列
@@ -207,7 +228,7 @@ const onTouch = (rowIndex, itemIndex) => {
   if (isScramble.value) {
     isScramble.value = false;
     isStart.value = true;
-    startTime = new Date().getTime();
+    startTime = Date.now();
     timeStart();
   }
 
@@ -223,46 +244,16 @@ const onTouch = (rowIndex, itemIndex) => {
   ) {
     clearInterval(timer);
     isStart.value = false;
-    endTime.value = new Date().getTime();
+    endTime.value = Date.now();
     isWin.value = true;
 
     // 保存记录
     recordStore.addRecord({
       duration: endTime.value - startTime,
       steps: step.value,
-      dateTime: new Date().getTime(),
+      dateTime: Date.now(),
     });
   }
-};
-
-/**
- * 判断是否可解
- * @param {number[][]} numsMap 二维数组
- * @returns {boolean} 是否可解
- */
-const isSolvable = (numsMap) => {
-  // 判断是否可解,计算逆序数,偶数可解
-  // let count = 0;
-  // for (let i = 0; i < numsMap.length; i++) {
-  //   for (let j = i + 1; j < numsMap.length; j++) {
-  //     if (numsMap[i] > numsMap[j]) {
-  //       count++;
-  //     }
-  //   }
-  // }
-  let sum = 0;
-  for (let i = 0; i < 16; i++) {
-    if (numsMap[i] === null) {
-      sum += parseInt(i / 4) + ((i + 1) % 4);
-      continue;
-    }
-    for (let j = 0; j < 16 - i; j++) {
-      if (numsMap[j + i] < numsMap[i]) {
-        sum++;
-      }
-    }
-  }
-  return sum % 2 === 0;
 };
 
 /**
@@ -299,11 +290,7 @@ const scramble = () => {
  */
 const timeStart = () => {
   timer = setInterval(() => {
-    interval.value = new Date().getTime() - startTime;
+    interval.value = Date.now() - startTime;
   }, 10);
 };
-
-onMounted(() => {
-  gameHashMap.value = createHashMap(gameMap.value);
-});
 </script>
