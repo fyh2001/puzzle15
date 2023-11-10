@@ -11,12 +11,58 @@
 body {
   min-height: 100vh;
   background: #f0f2f5;
-  /* overflow-x: hidden */
+  overflow-x: hidden;
 }
 
 /* 兼容ios输入 */
-* input, textarea {
+* input,
+textarea {
   -webkit-touch-callout: default !important;
   -webkit-user-select: auto !important;
   user-select: auto !important;
+}
+
+/* 渐显动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* 新页面右移入动画 */
+.slide-left-enter-active,
+.slide-left-leave-active {
+  position: fixed;
+  transition: all 0.3s ease;
+}
+.slide-left-enter-active {
+  z-index: 1;
+}
+
+.slide-left-enter-from {
+  transform: translateX(100%);
+}
+.slide-left-leave-to {
+  transform: translateX(-100%);
+}
+
+/* 页面右移出动画 */
+.slide-right-enter-active,
+.slide-right-leave-active {
+  position: fixed;
+  transition: all 0.3s ease;
+}
+.slide-right-leave-active {
+  z-index: 1;
+}
+
+.slide-right-enter-from {
+  transform: translateX(-100%);
+}
+.slide-right-leave-to {
+  transform: translateX(100%);
 }

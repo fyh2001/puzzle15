@@ -1,8 +1,10 @@
 <template>
   <div>
     <div @scroll="handleContainerScroll" h-100vh overflow-auto>
-      <router-view v-slot="{ Component }">
-        <component :is="Component" />
+      <router-view v-slot="{ Component, route }" >
+        <transition :name="route.meta.transition || 'fade'" mode="default">
+          <component :is="Component" class="w-screen" />
+        </transition>
       </router-view>
     </div>
     <!-- 底部tabbar -->
