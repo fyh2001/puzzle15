@@ -39,6 +39,26 @@
   </div>
 </template>
 
+<script>
+/**
+ * 创建哈希表
+ * @param {number[][]} arr 二维数组
+ * @returns {Map<number, {row: number, column: number}>} 哈希表
+ */
+const createHashMap = (arr) => {
+  const hashMap = new Map();
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < arr[i].length; j++) {
+      hashMap.set(arr[i][j], {
+        row: i,
+        column: j,
+      });
+    }
+  }
+  return hashMap;
+};
+</script>
+
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
@@ -56,7 +76,7 @@ const gameMap = ref([
 ]);
 
 // 哈希表
-const gameHashMap = ref(null);
+const gameHashMap = ref(createHashMap(gameMap.value));
 
 // 分组
 const redGroup = new Set([1, 2, 3, 4, 5, 9, 13]);
@@ -71,13 +91,8 @@ let startTime = 0; // 开始时间
 let endTime = ref(0); // 结束时间
 const interval = ref(0); // 间隔时间
 const time = computed(() => {
-  if (isStart.value) {
-    return formatDurationInGame(interval.value);
-  }
-
-  if (isWin.value) {
-    return formatDurationInGame(endTime.value - startTime);
-  }
+  if (isStart.value) return formatDurationInGame(interval.value);
+  if (isWin.value) return formatDurationInGame(endTime.value - startTime);
   return "00:00:000";
 });
 
@@ -174,24 +189,6 @@ const clickRules = (row, column) => {
   if (isStart.value) {
     step.value++;
   }
-};
-
-/**
- * 创建哈希表
- * @param {number[][]} arr 二维数组
- * @returns {Map<number, {row: number, column: number}>} 哈希表
- */
-const createHashMap = (arr) => {
-  const hashMap = new Map();
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = 0; j < arr[i].length; j++) {
-      hashMap.set(arr[i][j], {
-        row: i,
-        column: j,
-      });
-    }
-  }
-  return hashMap;
 };
 
 /**
@@ -298,8 +295,4 @@ const timeStart = () => {
     interval.value = new Date().getTime() - startTime;
   }, 10);
 };
-
-onMounted(() => {
-  gameHashMap.value = createHashMap(gameMap.value);
-});
 </script>
