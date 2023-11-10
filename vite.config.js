@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import { join } from "path";
 import UnoCSS from "unocss/vite";
 import presetIcons from '@unocss/preset-icons';
 import transformerDirective from "@unocss/transformer-directives";
@@ -9,6 +10,11 @@ import { NaiveUiResolver } from "unplugin-vue-components/resolvers";
 
 export default defineConfig({
   base: "/puzzle15",
+  resolve: {
+    alias: {
+      '@': join(__dirname, "src"),
+    }
+  },
   plugins: [
     vue(),
     UnoCSS({

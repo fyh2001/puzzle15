@@ -43,20 +43,7 @@ router.afterEach((to, from) => {
   const toIndex = to.meta.index;
   const fromIndex = from.meta.index;
 
-  console.log(toIndex, fromIndex);
-
-  if (toIndex > fromIndex) {
-    to.meta.transition = "slide-left";
-  }
-
-  if (toIndex < fromIndex) {
-    to.meta.transition = "slide-right";
-  }
-
-  if (toIndex === fromIndex) {
-    to.meta.transition = "fade";
-  }
-
+  to.meta.transition = toIndex > fromIndex ? "slide-left" : "slide-right";
 });
 
 export default router;
