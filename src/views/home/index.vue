@@ -2,7 +2,7 @@
   <div class="p-4">
     <title-bar class="mb-6" title="练习" />
 
-    <div ref="gameMapRef" class="grid grid-cols-1 gap-2 p-1 rounded-md">
+    <div class="grid grid-cols-1 gap-2 p-1 rounded-md">
       <div
         class="grid grid-cols-4 gap-2"
         v-for="(row, rowIndex) in gameMap"
@@ -44,8 +44,6 @@ import { c } from "naive-ui";
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
 
-const gameMapRef = ref(null);
-
 // 4 * 4
 const gameMap = ref([
   [1, 2, 3, 4],
@@ -65,7 +63,7 @@ const yellowGroup = [11, 12, 15];
 // 步数
 const step = ref(0);
 // 时间
-let timer = null;
+let timer = null; // 定时器
 let startTime = 0; // 开始时间
 let endTime = ref(0); // 结束时间
 const interval = ref(0); // 间隔时间
