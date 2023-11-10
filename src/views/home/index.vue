@@ -4,7 +4,7 @@
 
     <div class="grid gap-2 p-1 rounded-md">
       <div
-        class="grid grid-cols-4 gap-2 "
+        class="grid grid-cols-4 gap-2"
         v-for="(row, rowIndex) in gameMap"
         :key="rowIndex"
       >
@@ -16,7 +16,7 @@
           @click="onTouch(rowIndex, itemIndex)"
         >
           {{ item }}
-        </div> 
+        </div>
       </div>
     </div>
 
@@ -43,7 +43,7 @@
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
 import { useRecordStore } from "../../store/recordStore";
-import { formatDurationInGame } from "@/utils/time.js"
+import { formatDurationInGame } from "@/utils/time.js";
 
 const recordStore = useRecordStore();
 
@@ -59,9 +59,9 @@ const gameMap = ref([
 const gameHashMap = ref(null);
 
 // 分组
-const redGroup = [1, 2, 3, 4, 5, 9, 13];
-const blueGroup = [6, 7, 8, 10, 14];
-const yellowGroup = [11, 12, 15];
+const redGroup = new Set([1, 2, 3, 4, 5, 9, 13]);
+const blueGroup = new Set([6, 7, 8, 10, 14]);
+const yellowGroup = new Set([11, 12, 15]);
 
 // 步数
 const step = ref(0);
@@ -72,11 +72,11 @@ let endTime = ref(0); // 结束时间
 const interval = ref(0); // 间隔时间
 const time = computed(() => {
   if (isStart.value) {
-    return formatDurationInGame(interval.value)
+    return formatDurationInGame(interval.value);
   }
 
   if (isWin.value) {
-    return formatDurationInGame(endTime.value - startTime)
+    return formatDurationInGame(endTime.value - startTime);
   }
   return "00:00:000";
 });
@@ -94,13 +94,9 @@ const isWin = ref(false);
  * @returns {string} 样式类名
  */
 const getCellClass = (itemValue) => {
-  if (redGroup.includes(itemValue)) {
-    return "bg-red-4 shadow";
-  } else if (blueGroup.includes(itemValue)) {
-    return "bg-blue-4 shadow";
-  } else if (yellowGroup.includes(itemValue)) {
-    return "bg-yellow-4 shadow";
-  }
+  if (redGroup.has(itemValue)) return "bg-red-4 shadow";
+  if (blueGroup.has(itemValue)) return "bg-blue-4 shadow";
+  if (yellowGroup.has(itemValue)) return "bg-yellow-4 shadow";
   return "";
 };
 
