@@ -42,9 +42,10 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
-import { useRecoedStore } from "../../store/recoedStore";
+import { useRecordStore } from "../../store/recordStore";
+import { formatDurationInGame } from "@/utils/time.js"
 
-const recoedStore = useRecoedStore();
+const recordStore = useRecordStore();
 
 // 4 * 4
 const gameMap = ref([
@@ -71,36 +72,12 @@ let endTime = ref(0); // 结束时间
 const interval = ref(0); // 间隔时间
 const time = computed(() => {
   if (isStart.value) {
-    const millisecond = interval.value % 1000;
-    const second = parseInt(interval.value / 1000) % 60;
-    const minute = parseInt(interval.value / 1000 / 60) % 60;
-
-    return `${minute < 10 ? "0" + minute : minute}:${
-      second < 10 ? "0" + second : second
-    }:${
-      millisecond < 100
-        ? millisecond < 10
-          ? "00" + millisecond
-          : "0" + millisecond
-        : millisecond
-    }`;
+    return formatDurationInGame(interval.value)
   }
+
   if (isWin.value) {
-    const millisecond = (endTime.value - startTime) % 1000;
-    const second = parseInt((endTime.value - startTime) / 1000) % 60;
-    const minute = parseInt((endTime.value - startTime) / 1000 / 60) % 60;
-
-    return `${minute < 10 ? "0" + minute : minute}:${
-      second < 10 ? "0" + second : second
-    }:${
-      millisecond < 100
-        ? millisecond < 10
-          ? "00" + millisecond
-          : "0" + millisecond
-        : millisecond
-    }`;
+    return formatDurationInGame(endTime.value - startTime)
   }
-
   return "00:00:000";
 });
 
@@ -250,7 +227,7 @@ const onTouch = (rowIndex, itemIndex) => {
     isWin.value = true;
 
     // 保存记录
-    recoedStore.addRecord({
+    recordStore.addRecord({
       duration: endTime.value - startTime,
       steps: step.value,
       dateTime: new Date().getTime(),
