@@ -57,6 +57,36 @@ const createHashMap = (arr) => {
   }
   return hashMap;
 };
+
+/**
+ * 判断是否可解
+ * @param {number[][]} numsMap 二维数组
+ * @returns {boolean} 是否可解
+ */
+const isSolvable = (numsMap) => {
+  // 判断是否可解,计算逆序数,偶数可解
+  // let count = 0;
+  // for (let i = 0; i < numsMap.length; i++) {
+  //   for (let j = i + 1; j < numsMap.length; j++) {
+  //     if (numsMap[i] > numsMap[j]) {
+  //       count++;
+  //     }
+  //   }
+  // }
+  let sum = 0;
+  for (let i = 0; i < 16; i++) {
+    if (numsMap[i] === null) {
+      sum += parseInt(i / 4) + ((i + 1) % 4);
+      continue;
+    }
+    for (let j = 0; j < 16 - i; j++) {
+      if (numsMap[j + i] < numsMap[i]) {
+        sum++;
+      }
+    }
+  }
+  return sum % 2 === 0;
+};
 </script>
 
 <script setup>
@@ -122,9 +152,7 @@ const getCellClass = (itemValue) => {
  */
 const clickRules = (row, column) => {
   const item = gameMap.value[row][column];
-  if (item === null) {
-    return;
-  }
+  if (item === null) return;
 
   // 获取点击的单元格的坐标
   const itemRow = row;
@@ -200,7 +228,7 @@ const onTouch = (rowIndex, itemIndex) => {
   if (isScramble.value) {
     isScramble.value = false;
     isStart.value = true;
-    startTime = new Date().getTime();
+    startTime = Date.now();
     timeStart();
   }
 
@@ -216,46 +244,16 @@ const onTouch = (rowIndex, itemIndex) => {
   ) {
     clearInterval(timer);
     isStart.value = false;
-    endTime.value = new Date().getTime();
+    endTime.value = Date.now();
     isWin.value = true;
 
     // 保存记录
     recordStore.addRecord({
       duration: endTime.value - startTime,
       steps: step.value,
-      dateTime: new Date().getTime(),
+      dateTime: Date.now(),
     });
   }
-};
-
-/**
- * 判断是否可解
- * @param {number[][]} numsMap 二维数组
- * @returns {boolean} 是否可解
- */
-const isSolvable = (numsMap) => {
-  // 判断是否可解,计算逆序数,偶数可解
-  // let count = 0;
-  // for (let i = 0; i < numsMap.length; i++) {
-  //   for (let j = i + 1; j < numsMap.length; j++) {
-  //     if (numsMap[i] > numsMap[j]) {
-  //       count++;
-  //     }
-  //   }
-  // }
-  let sum = 0;
-  for (let i = 0; i < 16; i++) {
-    if (numsMap[i] === null) {
-      sum += parseInt(i / 4) + ((i + 1) % 4);
-      continue;
-    }
-    for (let j = 0; j < 16 - i; j++) {
-      if (numsMap[j + i] < numsMap[i]) {
-        sum++;
-      }
-    }
-  }
-  return sum % 2 === 0;
 };
 
 /**
@@ -292,7 +290,7 @@ const scramble = () => {
  */
 const timeStart = () => {
   timer = setInterval(() => {
-    interval.value = new Date().getTime() - startTime;
+    interval.value = Date.now() - startTime;
   }, 10);
 };
 </script>
