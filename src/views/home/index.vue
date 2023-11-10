@@ -2,21 +2,21 @@
   <div class="p-4">
     <title-bar class="mb-6" title="练习" />
 
-    <div class="grid grid-cols-1 gap-2 p-1 rounded-md">
+    <div class="grid gap-2 p-1 rounded-md">
       <div
-        class="grid grid-cols-4 gap-2"
+        class="grid grid-cols-4 gap-2 "
         v-for="(row, rowIndex) in gameMap"
         :key="rowIndex"
       >
         <div
-          class="p-6 rounded-md text-center text-5 font-bold"
+          class="aspect-square flex items-center justify-center rounded-md text-center text-5 font-bold"
           :class="getCellClass(item)"
           v-for="(item, itemIndex) in row"
           :key="itemIndex"
           @click="onTouch(rowIndex, itemIndex)"
         >
           {{ item }}
-        </div>
+        </div> 
       </div>
     </div>
 
@@ -40,9 +40,11 @@
 </template>
 
 <script setup>
-import { c } from "naive-ui";
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
+import { useRecoedStore } from "../../store/recoedStore";
+
+const recoedStore = useRecoedStore();
 
 // 4 * 4
 const gameMap = ref([
@@ -246,6 +248,13 @@ const onTouch = (rowIndex, itemIndex) => {
     isStart.value = false;
     endTime.value = new Date().getTime();
     isWin.value = true;
+
+    // 保存记录
+    recoedStore.addRecord({
+      duration: endTime.value - startTime,
+      steps: step.value,
+      dateTime: new Date().getTime(),
+    });
   }
 };
 
