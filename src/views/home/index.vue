@@ -93,9 +93,12 @@ const isSolvable = (numsMap) => {
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
 import { useRecordStore } from "../../store/recordStore";
+import { useUserStore } from "../../store/userStore";
 import { formatDurationInGame } from "@/utils/time.js";
+import recordRequest from "@/api/methods/record";
 
 const recordStore = useRecordStore();
+const userStore = useUserStore();
 
 // 4 * 4
 const gameMap = ref([
@@ -248,11 +251,7 @@ const onTouch = (rowIndex, itemIndex) => {
     isWin.value = true;
 
     // 保存记录
-    recordStore.addRecord({
-      duration: endTime.value - startTime,
-      steps: step.value,
-      dateTime: Date.now(),
-    });
+    saveRecord();
   }
 };
 
@@ -293,4 +292,32 @@ const timeStart = () => {
     interval.value = Date.now() - startTime;
   }, 10);
 };
+
+/**
+ * 保存记录
+ */
+const saveRecord = async () => {
+  // 保存到 store 中的未上传记录
+  const record = {
+    duration: endTime.value - startTime,
+    steps: step.value,
+    dateTime: Date.now(),
+  };
+  recordStore.addUnUploadRecord(record);
+
+  if (userStore.token === "") return;
+  
+  // 保存到数据库
+  const { data } = await recordRequest.save({
+    duration: record.duration,
+    steps: record.steps,
+  });
+  if (data.code === 200) {
+    recordStore.deleteUnUploadRecordByDateTime(record.dateTime);
+    window.$message.success("保存成功");
+  } else {
+    window.$message.error("保存失败");
+  }
+};
+
 </script>
