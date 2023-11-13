@@ -10,7 +10,13 @@
 
 <script setup>
 import GlobalProvider from "./components/GlobalProvider.vue";
+import { saveUnUploadRecords } from "@/common/uploadRecord.js"
+import { onMounted } from "vue";
+
+onMounted(() => {
+  saveUnUploadRecords();
+});
+
 </script>
 
-<style>
-</style>
+<style></style>
