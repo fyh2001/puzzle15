@@ -15,10 +15,11 @@
 <script setup>
 import { onMounted } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
-
+import recordRequest from "@/api/methods/record";
 import { useRecordStore } from "@/store/recordStore.js";
-
+import { useUserStore } from "@/store/userStore.js";
 const recordStore = useRecordStore();
+const userStore = useUserStore();
 
 const dataTableColumns = [
   {
@@ -27,7 +28,7 @@ const dataTableColumns = [
     key: "index",
     defaultSortOrder: "descend",
     sorter: "default",
-    width: "70"
+    width: "70",
   },
   {
     title: "时长",
@@ -51,16 +52,34 @@ const dataTableColumns = [
   },
 ];
 
-const dataTableList = ref([
-]);
+const dataTableList = ref([]);
 
 const dataTablePagination = ref({
   pageSize: 10,
   pageSizes: [10, 20, 30, 40],
 });
 
-onMounted(() => {
-  dataTableList.value = recordStore.getRecord
+const getRecord = async () => {
+  const { data } = await recordRequest.findByUserId();
+
+  if (data.code === 200) {
+    console.log(data.data);
+    recordStore.setRecord(data.data);
+  } else {
+    window.$message.error("数据更新失败");
+  }
+};
+
+console.log(recordStore.unUploadRecord)
+
+onMounted(async () => {
+  // 未登录
+  if (userStore.token === "") {
+    dataTableList.value = recordStore.getUnUploadRecord;
+    return
+  }
+  await getRecord();
+  dataTableList.value = recordStore.getRecord;
 });
 </script>
 
