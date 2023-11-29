@@ -1,8 +1,9 @@
 import axios from "axios";
 import { useUserStore } from "@/store/userStore";
+import router from "@/router/index";
 
 // const baseURL = "http://localhost:8080/api";
-// const baseURL = "http://192.168.31.141:8080/api";
+// const baseURL = "http://192.168.31.141:8081/api";
 const baseURL = "http://139.9.7.92:8081/api";
 
 const request = axios.create({
@@ -35,6 +36,26 @@ request.interceptors.request.use(
  */
 request.interceptors.response.use(
   (response) => {
+    const { data } = response;
+    if (data.code === 40001) {
+      // 未登录
+      const userStore = useUserStore();
+      userStore.setUser(null);
+      userStore.setToken("");
+
+      window.$message.error("请先登录");
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
+    } else if (data.code === 40002) {
+      // 未注册
+      window.$message.error("登录过期，请重新登录");
+
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
+    }
     return response;
   },
   (error) => {

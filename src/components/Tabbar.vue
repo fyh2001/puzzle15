@@ -1,8 +1,8 @@
 <template>
-  <div class="w-full py-3 bg-[#99CC33] rounded-4 overflow-hidden">
+  <div class="w-full py-3 bg-[#99CC33] bg-indigo-3 rounded-4 overflow-hidden">
     <!-- 选择框 -->
     <div
-      class="absolute left-0 h-10 rounded-xl bg-[#669933] transition-all duration-300"
+      class="absolute left-0 h-10 rounded-xl bg-[#669933] bg-indigo-5 transition-all duration-300"
       :style="{
         width: boxRect.width + 'px',
         transform: 'translateX(' + boxRect.left + 'px)',

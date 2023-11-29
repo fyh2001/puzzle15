@@ -1,7 +1,9 @@
 <template>
-  <div class="p-4">
-    <title-bar class="mb-6" title="练习" />
-
+  <div class="fixed inset-0 p-4 h-screen">
+    <div class="flex justify-between items-center mb-6">
+      <title-bar title="练习" />
+      <Dropdown />
+    </div>
     <div class="grid gap-2 p-1 rounded-md">
       <div
         class="grid grid-cols-4 gap-2"
@@ -23,7 +25,7 @@
     <div class="flex justify-around items-center mt-10">
       <div class="text-center">
         <div class="text-10 font-bold">{{ time }}</div>
-        <div class="text-4">步数: {{ step }}</div>
+        <div class="text-4">步数: {{ stepCount }}</div>
       </div>
 
       <n-button
@@ -31,6 +33,7 @@
         strong
         secondary
         type="primary"
+        color="#4f46e5"
         @click="scramble"
       >
         打乱
@@ -92,6 +95,7 @@ const isSolvable = (numsMap) => {
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import TitleBar from "../../components/TitleBar.vue";
+import Dropdown from "../../components/Dropdown.vue";
 import { useRecordStore } from "../../store/recordStore";
 import { useUserStore } from "../../store/userStore";
 import { formatDurationInGame } from "@/utils/time.js";
@@ -108,6 +112,10 @@ const gameMap = ref([
   [13, 14, 15, null],
 ]);
 
+// 打乱顺序
+let scrambleMap = [];
+let solution = [];
+
 // 哈希表
 const gameHashMap = ref(createHashMap(gameMap.value));
 
@@ -117,7 +125,7 @@ const blueGroup = new Set([6, 7, 8, 10, 14]);
 const yellowGroup = new Set([11, 12, 15]);
 
 // 步数
-const step = ref(0);
+const stepCount = ref(0);
 // 时间
 let timer = null; // 定时器
 let startTime = 0; // 开始时间
@@ -169,6 +177,10 @@ const clickRules = (row, column) => {
   if (itemRow == nullRow) {
     // 点击的单元格在空白单元格的右边
     if (itemColumn > nullColumn) {
+      // 保存移动的单元格
+      solution.push(item);
+      // 步数加一
+      stepCount.value++;
       for (let i = nullColumn; i < itemColumn; i++) {
         gameMap.value[itemRow][i] = gameMap.value[itemRow][i + 1];
         gameHashMap.value.set(gameMap.value[itemRow][i + 1], {
@@ -179,6 +191,10 @@ const clickRules = (row, column) => {
     }
     // 点击的单元格在空白单元格的左边
     else if (itemColumn < nullColumn) {
+      // 保存移动的单元格
+      solution.push(item);
+      // 步数加一
+      stepCount.value++;
       for (let i = nullColumn; i > itemColumn; i--) {
         gameMap.value[itemRow][i] = gameMap.value[itemRow][i - 1];
         gameHashMap.value.set(gameMap.value[itemRow][i - 1], {
@@ -195,6 +211,10 @@ const clickRules = (row, column) => {
   if (itemColumn == nullColumn) {
     // 点击的单元格在空白单元格的下边
     if (itemRow > nullRow) {
+      // 保存移动的单元格
+      solution.push(item);
+      // 步数加一
+      stepCount.value++;
       for (let i = nullRow; i < itemRow; i++) {
         gameMap.value[i][itemColumn] = gameMap.value[i + 1][itemColumn];
         gameHashMap.value.set(gameMap.value[i + 1][itemColumn], {
@@ -205,6 +225,10 @@ const clickRules = (row, column) => {
     }
     // 点击的单元格在空白单元格的上边
     else if (itemRow < nullRow) {
+      // 保存移动的单元格
+      solution.push(item);
+      // 步数加一
+      stepCount.value++;
       for (let i = nullRow; i > itemRow; i--) {
         gameMap.value[i][itemColumn] = gameMap.value[i - 1][itemColumn];
         gameHashMap.value.set(gameMap.value[i - 1][itemColumn], {
@@ -215,10 +239,6 @@ const clickRules = (row, column) => {
     }
     gameMap.value[itemRow][itemColumn] = null;
     gameHashMap.value.set(null, { row: itemRow, column: itemColumn });
-  }
-
-  if (isStart.value) {
-    step.value++;
   }
 };
 
@@ -259,12 +279,16 @@ const onTouch = (rowIndex, itemIndex) => {
  * 打乱
  */
 const scramble = () => {
-  if (isStart.value || isWin.value) {
-    clearInterval(timer);
-    isStart.value = false;
-    isWin.value = false;
-    step.value = 0;
-  }
+  // if (isStart.value || isWin.value) {
+
+  // }
+
+  clearInterval(timer);
+  isStart.value = false;
+  isWin.value = false;
+  stepCount.value = 0;
+  scrambleMap = [];
+  solution = [];
 
   // 打乱
   const numsMap = gameMap.value.flat();
@@ -272,6 +296,8 @@ const scramble = () => {
   do {
     numsMap.sort(() => Math.random() - 0.5);
   } while (!isSolvable(numsMap));
+
+  scrambleMap = numsMap; // 保存打乱顺序
 
   // 重新赋值
   for (let i = 0; i < gameMap.value.length; i++) {
@@ -298,26 +324,29 @@ const timeStart = () => {
  */
 const saveRecord = async () => {
   // 保存到 store 中的未上传记录
+  const dateTime = Date.now();
   const record = {
+    event: "p15",
     duration: endTime.value - startTime,
-    steps: step.value,
-    dateTime: Date.now(),
+    stepCount: stepCount.value,
+    scramble: scrambleMap.toString(),
+    solution: solution.toString(),
   };
-  recordStore.addUnUploadRecord(record);
+  recordStore.addUnUploadRecord({
+    ...record,
+    dateTime,
+  });
 
   if (userStore.token === "") return;
-  
+
   // 保存到数据库
-  const { data } = await recordRequest.save({
-    duration: record.duration,
-    steps: record.steps,
-  });
+  const { data } = await recordRequest.create(record);
+  console.log(data);
   if (data.code === 200) {
-    recordStore.deleteUnUploadRecordByDateTime(record.dateTime);
+    recordStore.deleteUnUploadRecordByDateTime(dateTime);
     window.$message.success("保存成功");
   } else {
     window.$message.error("保存失败");
   }
 };
-
 </script>

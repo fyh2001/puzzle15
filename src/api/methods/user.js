@@ -3,26 +3,21 @@ import { request } from "../index";
 const baseURL = "/user";
 
 export default {
-  registerByUsernameAndPassword: (data) =>
+  register: (data) =>
     request({
-      url: baseURL + "/registerByUsernameAndPassword",
+      url: baseURL + "/register",
       method: "POST",
       data,
     }),
-  loginByUsernameAndPassword: (data) =>
+  login: (data) =>
     request({
-      url: baseURL + "/loginByUsernameAndPassword",
+      url: baseURL + "/login",
       method: "POST",
       data,
     }),
-    findByLoggedInUser: () =>
+  getByLoggedInUser: () =>
     request({
-      url: baseURL + "/findByLoggedInUser",
-      method: "GET",
-    }),
-    findBestRecordByLoggedInUser: () =>
-    request({
-      url: baseURL + "/findBestRecordByLoggedInUser",
+      url: baseURL + "/getByLoggedInUser",
       method: "GET",
     }),
 };

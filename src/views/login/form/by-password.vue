@@ -17,6 +17,8 @@
         <n-form-item path="password" style="--n-label-height: 10px">
           <n-input
             v-model:value="formValue.password"
+            type="password"
+            show-password-on="click"
             style="--n-height: 50px"
             placeholder="请输入密码"
             size="large"
@@ -51,6 +53,8 @@
 import TitleBar from "../../../components/TitleBar.vue";
 import userRequest from "@/api/methods/user";
 import router from "../../../router";
+import md5 from "js-md5";
+import { salt } from "@/config/index";
 import { useUserStore } from "@/store/userStore";
 import { saveUnUploadRecords } from "@/common/uploadRecord.js";
 
@@ -63,9 +67,26 @@ const formValue = ref({
   password: "",
 });
 
+// 验证规则
+const regulation = {
+  username: {
+    label: "用户名",
+    expression: /^[a-zA-Z0-9]{6,12}$/,
+    message: "用户名只允许是6-12位字母或数字的组合",
+  },
+  password: {
+    label: "密码",
+    expression: /^[a-zA-Z0-9]{6,12}$/,
+    message: "密码只允许是6-12位字母或数字的组合",
+  },
+};
+
 // 登录按钮是否禁用
 const loginButtonDisabled = computed(() => {
-  return !(formValue.value.username && formValue.value.password);
+  return !(
+    regulation.username.expression.test(formValue.value.username) &&
+    regulation.password.expression.test(formValue.value.password)
+  );
 });
 
 // 表单验证规则
@@ -73,12 +94,19 @@ const rules = {
   username: [
     { required: true, message: "请输入账号", trigger: "blur" },
     {
-      // pattern: /^\d{10}$/,
-      message: "请输入正确的用户名",
+      pattern: regulation.username.expression,
+      message: regulation.username.message,
       trigger: "blur",
     },
   ],
-  password: [{ required: true, message: "请输入密码", trigger: "blur" }],
+  password: [
+    { required: true, message: "请输入密码", trigger: "blur" },
+    {
+      pattern: regulation.password.expression,
+      message: regulation.password.message,
+      trigger: "blur",
+    },
+  ],
 };
 
 /**
@@ -86,15 +114,24 @@ const rules = {
  */
 const loginHandler = async () => {
   // 表单验证
-  if (!formValue.value.username || !formValue.value.password) return;
+  if (
+    !(
+      regulation.username.expression.test(formValue.value.username) &&
+      regulation.password.expression.test(formValue.value.password)
+    )
+  ) {
+    window.$message.error("请按照规则填写");
+    return;
+  }
 
-  const { data } = await userRequest.loginByUsernameAndPassword(
-    formValue.value
-  ); // 登录
+  const { data } = await userRequest.login({
+    username: formValue.value.username,
+    password: md5(formValue.value.password + salt),
+  }); // 登录
 
   if (data.code === 200) {
-
-    userStore.setUser(data.data); // 更新本地用户信息
+    console.log(data.data)
+    userStore.setUser(data.data.user); // 更新本地用户信息
     userStore.setToken(data.data.token); // 更新本地token
 
     await saveUnUploadRecords(); // 保存未上传的记录

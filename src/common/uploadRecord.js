@@ -14,11 +14,17 @@ export const saveUnUploadRecords = async () => {
     return;
   }
 
+  console.log("unUploadRecords", unUploadRecords)
+
   for (let i = 0; i < unUploadRecords.length; i++) {
     const record = unUploadRecords[i];
-    const { data } = await recordRequest.save({
+
+    const { data } = await recordRequest.create({
+      event: "p15",
       duration: record.duration,
-      steps: record.steps,
+      stepCount: record.stepCount,
+      scramble: record.scramble,
+      solution: record.solution,
     });
 
     if (data.code === 200) {

@@ -11,6 +11,10 @@ export const useRecordStore = defineStore("record", {
   state: () => ({
     record: [],
     unUploadRecord: [],
+    bestSingleRecord: [],
+    bestAverage5Record: [],
+    bestAverage12Record: [],
+    bestStepCountRecord: [],
   }),
   getters: {
     getRecord() {
@@ -29,6 +33,7 @@ export const useRecordStore = defineStore("record", {
         };
       });
     },
+
     getUnUploadRecord() {
       return this.unUploadRecord.map((item, itemIndex) => {
         const index = itemIndex + 1;
@@ -42,6 +47,56 @@ export const useRecordStore = defineStore("record", {
           duration,
           ao5,
           ao12,
+        };
+      });
+    },
+
+    getBestSingleRecord() {
+      return this.bestSingleRecord?.map((item, itemIndex) => {
+        const rank = itemIndex + 1;
+        const duration = formatDurationInRecord(item.bestSingleDuration);
+        const stepCount = item.bestSingleStepCount;
+        return {
+          ...item,
+          rank,
+          duration,
+          stepCount
+        };
+      });
+    },
+
+    getBestAverage5Record() {
+      return this.bestAverage5Record?.map((item, itemIndex) => {
+        const rank = itemIndex + 1;
+        const duration = formatDurationInRecord(item.bestAverageDuration);
+        return {
+          ...item,
+          rank,
+          duration,
+        };
+      });
+    },
+
+    getBestAverage12Record() {
+      return this.bestAverage12Record?.map((item, itemIndex) => {
+        const rank = itemIndex + 1;
+        const duration = formatDurationInRecord(item.bestAverageDuration);
+        return {
+          ...item,
+          rank,
+          duration,
+        };
+      });
+    },
+
+    getBestStepCountRecord() {
+      return this.bestStepCountRecord?.map((item, itemIndex) => {
+        const rank = itemIndex + 1;
+        const stepCount = item.bestStepCount;
+        return {
+          ...item,
+          rank,
+          stepCount,
         };
       });
     }
@@ -65,6 +120,7 @@ export const useRecordStore = defineStore("record", {
         this.record[index][key] = record[key];
       }
     },
+
     setUnUploadRecord(record) {
       this.unUploadRecord = record;
     },
@@ -79,7 +135,6 @@ export const useRecordStore = defineStore("record", {
         (item) => item.dateTime !== dateTime
       );
     },
-
     updateUnUploadRecord(record) {
       const index = this.unUploadRecord.findIndex(
         (item) => item.id === record.id
@@ -88,5 +143,18 @@ export const useRecordStore = defineStore("record", {
         this.unUploadRecord[index][key] = record[key];
       }
     },
+
+    setBestSingleRecord(record) {
+      this.bestSingleRecord = record;
+    },
+    setBestAverage5Record(record) {
+      this.bestAverage5Record = record;
+    },
+    setBestAverage12Record(record) {
+      this.bestAverage12Record = record;
+    },
+    setBestStepCountRecord(record) {
+      this.bestStepCountRecord = record;
+    }
   },
 });

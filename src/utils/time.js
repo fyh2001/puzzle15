@@ -69,10 +69,11 @@ export const formatTimestampByformatedDurationInGame = (formatedDuration) => {
  * @returns {number} 毫秒数
  */
 export const formatTimestampByformatedDurationInRecord = (formatedDuration) => {
-  const [minute, secondAndmillisecond] = formatedDuration.split(":");
 
-  const [second, millisecond] = secondAndmillisecond.split(".");
+  const [minute, second, millisecond] = formatedDuration.split(/[:.]/);
 
+
+  console.log(minute, second, millisecond);
   return (
     parseInt(minute) * 60 * 1000 +
     parseInt(second) * 1000 +
