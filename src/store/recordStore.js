@@ -15,23 +15,23 @@ export const useRecordStore = defineStore("record", {
     bestAverage5Record: [],
     bestAverage12Record: [],
     bestStepCountRecord: [],
+
+    recordDetailParams: {},
   }),
   getters: {
     getRecord() {
       return this.record.map((item, itemIndex) => {
-        const index = itemIndex + 1;
-        const ao5 = getAverageOf5(this.record.slice(0, index));
-        const ao12 = getAverageOf12(this.record.slice(0, index));
+        const ao5 = getAverageOf5(this.record.slice(itemIndex, itemIndex + 5));
+        const ao12 = getAverageOf12(this.record.slice(itemIndex, itemIndex + 12));
         const duration = formatDurationInRecord(item.duration);
 
         return {
           ...item,
-          index,
           duration,
           ao5,
           ao12,
         };
-      });
+      }).slice(0,10)
     },
 
     getUnUploadRecord() {
@@ -39,7 +39,7 @@ export const useRecordStore = defineStore("record", {
         const index = itemIndex + 1;
         const ao5 = getAverageOf5(this.unUploadRecord.slice(0, index));
         const ao12 = getAverageOf12(this.unUploadRecord.slice(0, index));
-        const duration = formatDurationInRecord(item.duration);
+        const duration = formatDurationInRecord(item.post.duration);
 
         return {
           ...item,
@@ -47,6 +47,7 @@ export const useRecordStore = defineStore("record", {
           duration,
           ao5,
           ao12,
+          stepCount: item.post.stepCount,
         };
       });
     },
@@ -155,6 +156,10 @@ export const useRecordStore = defineStore("record", {
     },
     setBestStepCountRecord(record) {
       this.bestStepCountRecord = record;
+    },
+
+    setRecordDetailParams(params) {
+      this.recordDetailParams = params;
     }
   },
 });

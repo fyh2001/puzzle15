@@ -1,16 +1,18 @@
 <template>
-  <div class="flex justify-center items-center h-screen p-4">
-    <div class="px-5 py-6 w-full bg-white rd-3 shadow -translate-y-1/3">
+  <div class="flex justify-center items-center p-4">
+    <n-el class="px-5 py-6 w-full rd-3 shadow translate-y-1/4"
+      style="background: var(--login-panel-background-color)"
+    >
       <title-bar class="mb-4" title="登录" />
       <!-- 表单 -->
       <n-form ref="formRef" :label-width="80" :model="formValue" :rules="rules">
         <n-form-item path="username" style="--n-label-height: 0px">
           <n-input
             v-model:value="formValue.username"
-            style="--n-height: 50px; --n-border-radius: 0.5rem"
+            style="--n-height: 50px; --n-border-radius: 0.75rem"
             placeholder="邮箱/手机号码/用户名"
             size="large"
-            round
+
           />
         </n-form-item>
 
@@ -19,10 +21,9 @@
             v-model:value="formValue.password"
             type="password"
             show-password-on="click"
-            style="--n-height: 50px"
+            style="--n-height: 50px; --n-border-radius: 0.75rem"
             placeholder="请输入密码"
             size="large"
-            round
           />
         </n-form-item>
       </n-form>
@@ -45,7 +46,7 @@
         <div>|</div>
         <div>忘记密码?</div>
       </div>
-    </div>
+    </n-el>
   </div>
 </template>
 
@@ -148,9 +149,9 @@ const loginHandler = async () => {
 onMounted(() => {});
 </script>
 
-<style>
-.n-input .n-input__border,
-.n-input .n-input__state-border {
+<style scoped>
+.n-input >>> .n-input__border,
+.n-input >>> .n-input__state-border {
   border-radius: 0.75rem;
 }
 </style>

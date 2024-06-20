@@ -2,7 +2,7 @@
   <div class="fixed inset-0 p-4 h-screen">
     <div class="flex justify-between items-center mb-6">
       <title-bar title="练习" />
-      <Dropdown />
+      <dropdown :options="options" />
     </div>
     <div class="grid gap-2 p-1 rounded-md">
       <div
@@ -21,10 +21,9 @@
         </div>
       </div>
     </div>
-
-    <div class="flex justify-around items-center mt-10">
-      <div class="text-center">
-        <div class="text-10 font-bold">{{ time }}</div>
+    <div class="flex justify-around items-center w-full mt-10">
+      <div class="w-42 text-center tabular-nums">
+        <div class="text-8 font-bold">{{ time }}</div>
         <div class="text-4">步数: {{ stepCount }}</div>
       </div>
 
@@ -33,7 +32,6 @@
         strong
         secondary
         type="primary"
-        color="#4f46e5"
         @click="scramble"
       >
         打乱
@@ -42,67 +40,42 @@
   </div>
 </template>
 
-<script>
-/**
- * 创建哈希表
- * @param {number[][]} arr 二维数组
- * @returns {Map<number, {row: number, column: number}>} 哈希表
- */
-const createHashMap = (arr) => {
-  const hashMap = new Map();
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = 0; j < arr[i].length; j++) {
-      hashMap.set(arr[i][j], {
-        row: i,
-        column: j,
-      });
-    }
-  }
-  return hashMap;
-};
-
-/**
- * 判断是否可解
- * @param {number[][]} numsMap 二维数组
- * @returns {boolean} 是否可解
- */
-const isSolvable = (numsMap) => {
-  // 判断是否可解,计算逆序数,偶数可解
-  // let count = 0;
-  // for (let i = 0; i < numsMap.length; i++) {
-  //   for (let j = i + 1; j < numsMap.length; j++) {
-  //     if (numsMap[i] > numsMap[j]) {
-  //       count++;
-  //     }
-  //   }
-  // }
-  let sum = 0;
-  for (let i = 0; i < 16; i++) {
-    if (numsMap[i] === null) {
-      sum += parseInt(i / 4) + ((i + 1) % 4);
-      continue;
-    }
-    for (let j = 0; j < 16 - i; j++) {
-      if (numsMap[j + i] < numsMap[i]) {
-        sum++;
-      }
-    }
-  }
-  return sum % 2 === 0;
-};
-</script>
-
-<script setup>
+<script setup lang="jsx">
 import { computed, onMounted, ref } from "vue";
-import TitleBar from "../../components/TitleBar.vue";
-import Dropdown from "../../components/Dropdown.vue";
-import { useRecordStore } from "../../store/recordStore";
-import { useUserStore } from "../../store/userStore";
+import router from "../../router";
+import TitleBar from "@/components/TitleBar.vue";
+import Dropdown from "@/components/Dropdown.vue";
+import { useRecordStore } from "@/store/recordStore";
+import { useUserStore } from "@/store/userStore";
+import { useScrambleStore } from "@/store/scrambleStore";
 import { formatDurationInGame } from "@/utils/time.js";
+import {
+  clickRules,
+  getCellClass,
+  createHashMap,
+  isSolvable,
+  getScramble,
+  setNPerm,
+} from "@/common/game.js";
+import {
+  encryptNum,
+  decryptStr,
+  generateRandomIdx,
+} from "@/utils/encipherment.js";
+import {
+  ContentCopyRound,
+  ContentPasteRound,
+  CableRound,
+  AddBoxRound,
+  SensorDoorRound,
+} from "@vicons/material";
+import ClipboardJS from "clipboard";
 import recordRequest from "@/api/methods/record";
+import websocketRequest from "@/api/methods/websocket";
 
 const recordStore = useRecordStore();
 const userStore = useUserStore();
+const scrambleStore = useScrambleStore();
 
 // 4 * 4
 const gameMap = ref([
@@ -114,15 +87,11 @@ const gameMap = ref([
 
 // 打乱顺序
 let scrambleMap = [];
+// 解法
 let solution = [];
 
 // 哈希表
 const gameHashMap = ref(createHashMap(gameMap.value));
-
-// 分组
-const redGroup = new Set([1, 2, 3, 4, 5, 9, 13]);
-const blueGroup = new Set([6, 7, 8, 10, 14]);
-const yellowGroup = new Set([11, 12, 15]);
 
 // 步数
 const stepCount = ref(0);
@@ -144,103 +113,205 @@ const isScramble = ref(false);
 // 是否胜利
 const isWin = ref(false);
 
-/**
- * 获取单元格样式
- * @param {number} itemValue 单元格值
- * @returns {string} 样式类名
- */
-const getCellClass = (itemValue) => {
-  if (redGroup.has(itemValue)) return "bg-red-4 shadow";
-  if (blueGroup.has(itemValue)) return "bg-blue-4 shadow";
-  if (yellowGroup.has(itemValue)) return "bg-yellow-4 shadow";
-  return "";
+// 加密表单
+const formData = {
+  ri: 0, // 随机idx
 };
 
-/**
- * 点击规则
- * @param {number} row 行
- * @param {number} column 列
- */
-const clickRules = (row, column) => {
-  const item = gameMap.value[row][column];
-  if (item === null) return;
+const options = [
+  // 复制打乱
+  {
+    label: "复制打乱",
+    key: "copyScramble",
+    disabled: false,
+    icon: () => {
+      return (
+        <n-el class="flex items-center" style="color: var(--primary-color)">
+          <n-icon size="18" component={ContentCopyRound} />
+        </n-el>
+      );
+    },
+    props: {
+      onClick: () => {
+        const clipboardText =
+          scrambleStore.scramble.scrambleStr !== ""
+            ? scrambleStore.scramble.scrambleStr
+            : scrambleStore.scrambleByShare.scrambleStr;
 
-  // 获取点击的单元格的坐标
-  const itemRow = row;
-  const itemColumn = column;
+        if (clipboardText !== "") {
+          const res = ClipboardJS.copy(clipboardText);
 
-  // 获取空白单元格的坐标
-  const nullRow = gameHashMap.value.get(null).row;
-  const nullColumn = gameHashMap.value.get(null).column;
+          if (res) {
+            window.$message.success("复制成功");
+          } else {
+            window.$message.error("复制失败");
+          }
+        } else {
+          window.$message.error("打乱顺序为空");
+        }
+      },
+    },
+  },
+  // 粘贴打乱
+  {
+    label: "粘贴打乱",
+    key: "pasteScramble",
+    disabled: false,
+    icon: () => {
+      return (
+        <n-el class="flex items-center" style="color: var(--primary-color)">
+          <n-icon size="18" component={ContentPasteRound} />
+        </n-el>
+      );
+    },
+    props: {
+      onClick: () => {
+        const clipboardText = ref("");
 
-  // 同一行
-  if (itemRow == nullRow) {
-    // 点击的单元格在空白单元格的右边
-    if (itemColumn > nullColumn) {
-      // 保存移动的单元格
-      solution.push(item);
-      // 步数加一
-      stepCount.value++;
-      for (let i = nullColumn; i < itemColumn; i++) {
-        gameMap.value[itemRow][i] = gameMap.value[itemRow][i + 1];
-        gameHashMap.value.set(gameMap.value[itemRow][i + 1], {
-          row: itemRow,
-          column: i,
-        });
-      }
-    }
-    // 点击的单元格在空白单元格的左边
-    else if (itemColumn < nullColumn) {
-      // 保存移动的单元格
-      solution.push(item);
-      // 步数加一
-      stepCount.value++;
-      for (let i = nullColumn; i > itemColumn; i--) {
-        gameMap.value[itemRow][i] = gameMap.value[itemRow][i - 1];
-        gameHashMap.value.set(gameMap.value[itemRow][i - 1], {
-          row: itemRow,
-          column: i,
-        });
-      }
-    }
-    gameMap.value[itemRow][itemColumn] = null;
-    gameHashMap.value.set(null, { row: itemRow, column: itemColumn });
-  }
+        window.$dialog.success({
+          title: "粘贴打乱",
+          content: () => {
+            return (
+              <div class="flex flex-col">
+                <n-input
+                  class="mt-2"
+                  type="textarea"
+                  rows={4}
+                  placeholder="请将打乱顺序粘贴到下方"
+                  v-model:value={clipboardText.value}
+                />
+              </div>
+            );
+          },
+          positiveText: "确定",
+          negativeText: "取消",
+          onPositiveClick: () => {
+            if (clipboardText.value === "") {
+              return window.$message.error("打乱顺序为空");
+            }
 
-  // 同一列
-  if (itemColumn == nullColumn) {
-    // 点击的单元格在空白单元格的下边
-    if (itemRow > nullRow) {
-      // 保存移动的单元格
-      solution.push(item);
-      // 步数加一
-      stepCount.value++;
-      for (let i = nullRow; i < itemRow; i++) {
-        gameMap.value[i][itemColumn] = gameMap.value[i + 1][itemColumn];
-        gameHashMap.value.set(gameMap.value[i + 1][itemColumn], {
-          row: i,
-          column: itemColumn,
+            const { t, idx } = decryptStr(clipboardText.value);
+
+            if (generateRandomIdx(t) !== idx) {
+              return window.$message.error("识别有误,请注意输入");
+            }
+
+            scrambleMap = setNPerm(gameMap.value.flat(), idx, 16, true); // 保存打乱顺序
+            formData.ri = idx;
+
+            // 重新赋值
+            for (let i = 0; i < gameMap.value.length; i++) {
+              for (let j = 0; j < gameMap.value[i].length; j++) {
+                gameMap.value[i][j] = scrambleMap[i * 4 + j];
+                gameHashMap.value.set(scrambleMap[i * 4 + j], {
+                  row: i,
+                  column: j,
+                });
+              }
+            }
+
+            isScramble.value = true;
+          },
         });
-      }
-    }
-    // 点击的单元格在空白单元格的上边
-    else if (itemRow < nullRow) {
-      // 保存移动的单元格
-      solution.push(item);
-      // 步数加一
-      stepCount.value++;
-      for (let i = nullRow; i > itemRow; i--) {
-        gameMap.value[i][itemColumn] = gameMap.value[i - 1][itemColumn];
-        gameHashMap.value.set(gameMap.value[i - 1][itemColumn], {
-          row: i,
-          column: itemColumn,
-        });
-      }
-    }
-    gameMap.value[itemRow][itemColumn] = null;
-    gameHashMap.value.set(null, { row: itemRow, column: itemColumn });
-  }
-};
+      },
+    },
+  },
+  {
+    label: "对战",
+    key: "match",
+    disabled: false,
+    icon: () => {
+      return (
+        <n-el class="flex items-center" style="color: var(--primary-color)">
+          <n-icon size="18" component={CableRound} />
+        </n-el>
+      );
+    },
+    children: [
+      {
+        label: "创建房间",
+        key: "createRoom",
+        disabled: false,
+        icon: () => {
+          return (
+            <n-el class="flex items-center" style="color: var(--primary-color)">
+              <n-icon size="18" component={AddBoxRound} />
+            </n-el>
+          );
+        },
+        props: {
+          onClick: async () => {
+            const { data } = await websocketRequest.createRoom();
+
+            if (data.code === 200) {
+              const roomId = data.data;
+              console.log("create room success: ", roomId);
+
+              window.$message.success("创建成功");
+              router.push({
+                name: "MatchRoom",
+                params: { roomId },
+              });
+            } else {
+              window.$message.error("创建失败");
+            }
+          },
+        },
+      },
+      {
+        label: "加入房间",
+        key: "joinRoom",
+        disabled: false,
+        icon: () => {
+          return (
+            <n-el class="flex items-center" style="color: var(--primary-color)">
+              <n-icon size="18" component={SensorDoorRound} />
+            </n-el>
+          );
+        },
+        props: {
+          onClick: () => {
+            const roomId = ref("");
+
+            window.$dialog.success({
+              title: "加入房间",
+              content: () => {
+                return (
+                  <div class="flex flex-col">
+                    <n-input
+                      class="mt-2"
+                      placeholder="请输入房间号"
+                      v-model:value={roomId.value}
+                    />
+                  </div>
+                );
+              },
+              positiveText: "确定",
+              negativeText: "取消",
+              onPositiveClick: async () => {
+                if (roomId.value === "") {
+                  return window.$message.error("房间号不能为空");
+                }
+
+                const { data } = await websocketRequest.checkRoom(roomId.value);
+
+                if (data.code === 200) {
+                  window.$message.success("加入成功");
+                  router.push({
+                    name: "MatchRoom",
+                    params: { roomId: roomId.value },
+                  });
+                } else {
+                  window.$message.error(data.msg);
+                }
+              },
+            });
+          },
+        },
+      },
+    ],
+  },
+];
 
 /**
  * 触摸
@@ -255,7 +326,17 @@ const onTouch = (rowIndex, itemIndex) => {
     timeStart();
   }
 
-  clickRules(rowIndex, itemIndex);
+  const { newGameMap, newGameHashMap, newStepCount, newSolution } = clickRules(
+    gameMap.value,
+    gameHashMap.value,
+    rowIndex,
+    itemIndex
+  );
+
+  gameMap.value = newGameMap;
+  gameHashMap.value = newGameHashMap;
+  stepCount.value += newStepCount;
+  newSolution == "" ? "" : solution.push(newSolution);
 
   // 判断是否胜利
   if (
@@ -270,6 +351,9 @@ const onTouch = (rowIndex, itemIndex) => {
     endTime.value = Date.now();
     isWin.value = true;
 
+    scrambleStore.clearScramble();
+    scrambleStore.clearScrambleByShare();
+
     // 保存记录
     saveRecord();
   }
@@ -279,9 +363,9 @@ const onTouch = (rowIndex, itemIndex) => {
  * 打乱
  */
 const scramble = () => {
-  // if (isStart.value || isWin.value) {
-
-  // }
+  if (scrambleStore.scramble.scrambleStr !== "") {
+    return window.$message.error("请先完成本次还原");
+  }
 
   clearInterval(timer);
   isStart.value = false;
@@ -291,13 +375,14 @@ const scramble = () => {
   solution = [];
 
   // 打乱
-  const numsMap = gameMap.value.flat();
+  let numsMap = gameMap.value.flat();
 
-  do {
-    numsMap.sort(() => Math.random() - 0.5);
-  } while (!isSolvable(numsMap));
+  const timestamp = Date.now();
 
-  scrambleMap = numsMap; // 保存打乱顺序
+  const { scramble, randomIdx } = getScramble(numsMap, timestamp);
+  formData.ri = randomIdx;
+  scrambleStore.setScramble(encryptNum(timestamp, randomIdx), randomIdx);
+  scrambleMap = scramble; // 保存打乱顺序
 
   // 重新赋值
   for (let i = 0; i < gameMap.value.length; i++) {
@@ -326,12 +411,19 @@ const saveRecord = async () => {
   // 保存到 store 中的未上传记录
   const dateTime = Date.now();
   const record = {
-    event: "p15",
-    duration: endTime.value - startTime,
-    stepCount: stepCount.value,
-    scramble: scrambleMap.toString(),
-    solution: solution.toString(),
+    post: {
+      event: "p15",
+      duration: endTime.value - startTime,
+      stepCount: stepCount.value,
+      scramble: scrambleMap.toString(),
+      solution: solution.toString(),
+    },
+    params: {
+      ...formData,
+      // ri: formData.ri,
+    },
   };
+
   recordStore.addUnUploadRecord({
     ...record,
     dateTime,
@@ -341,7 +433,6 @@ const saveRecord = async () => {
 
   // 保存到数据库
   const { data } = await recordRequest.create(record);
-  console.log(data);
   if (data.code === 200) {
     recordStore.deleteUnUploadRecordByDateTime(dateTime);
     window.$message.success("保存成功");
@@ -349,4 +440,35 @@ const saveRecord = async () => {
     window.$message.error("保存失败");
   }
 };
+
+/**
+ * 初始化游戏地图
+ */
+const initGameMap = () => {
+  if (scrambleStore.scramble.scrambleStr === "") return;
+
+  const scramble = setNPerm(
+    gameMap.value.flat(),
+    parseInt(scrambleStore.scramble.scrambleIdx),
+    16,
+    true
+  );
+
+  scrambleMap = scramble; // 保存打乱顺序
+  formData.ri = scrambleStore.scramble.scrambleIdx;
+
+  // 重新赋值
+  for (let i = 0; i < gameMap.value.length; i++) {
+    for (let j = 0; j < gameMap.value[i].length; j++) {
+      gameMap.value[i][j] = scramble[i * 4 + j];
+      gameHashMap.value.set(scramble[i * 4 + j], { row: i, column: j });
+    }
+  }
+
+  isScramble.value = true;
+};
+
+onMounted(() => {
+  initGameMap();
+});
 </script>

@@ -1,25 +1,25 @@
 <template>
-  <div class="flex justify-center items-center h-screen p-4">
-    <div class="px-5 py-6 w-full bg-white rd-3 shadow -translate-y-1/4">
+  <div class="flex justify-center items-center p-4">
+    <n-el class="px-5 py-6 w-full rd-3 shadow translate-y-1/8"
+    style="background: var(--register-panel-background-color)"
+    >
       <title-bar class="mb-4" title="注册" />
       <!-- 表单 -->
       <n-form ref="formRef" :label-width="80" :model="formValue" :rules="rules">
         <n-form-item path="username" style="--n-label-height: 0px">
           <n-input
             v-model:value="formValue.username"
-            style="--n-height: 50px; --n-border-radius: 0.5rem"
+            style="--n-height: 50px; --n-border-radius: 0.75rem"
             placeholder="用于登录的用户名"
             size="large"
-            round
           />
         </n-form-item>
         <n-form-item path="nickname" style="--n-label-height: 10px">
           <n-input
             v-model:value="formValue.nickname"
-            style="--n-height: 50px"
+            style="--n-height: 50px; --n-border-radius: 0.75rem"
             placeholder="用于展示的昵称"
             size="large"
-            round
           />
         </n-form-item>
         <n-form-item path="password" style="--n-label-height: 10px">
@@ -27,10 +27,9 @@
             v-model:value="formValue.password"
             type="password"
             show-password-on="click"
-            style="--n-height: 50px"
+            style="--n-height: 50px; --n-border-radius: 0.75rem"
             placeholder="用于登录的密码"
             size="large"
-            round
           />
         </n-form-item>
       </n-form>
@@ -53,7 +52,7 @@
         <div>|</div>
         <div>忘记密码?</div>
       </div>
-    </div>
+    </n-el>
   </div>
 </template>
 
@@ -164,9 +163,9 @@ const registerHandler = async () => {
 onMounted(() => {});
 </script>
 
-<style>
-.n-input .n-input__border,
-.n-input .n-input__state-border {
+<style scoped>
+.n-input >>> .n-input__border,
+.n-input >>> .n-input__state-border {
   border-radius: 0.75rem;
 }
 </style>

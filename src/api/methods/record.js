@@ -7,19 +7,24 @@ export default {
     request({
       url: baseURL + "/create",
       method: "POST",
-      data,
+      data: data.post,
+      params: { ...data.params }
     }),
 
-  getById: () =>
+  getById: (id) =>
     request({
       url: baseURL + "/getById",
       method: "GET",
+      params: { id },
     }),
 
-  getByUserId: () =>
+    getByUserIdWithPaginate: (pagination) =>
     request({
-      url: baseURL + "/getByUserId",
+      url: baseURL + "/getByUserIdWithPaginate",
       method: "GET",
+      params: {
+        ...pagination
+      },
     }),
 
     getTop50: () =>

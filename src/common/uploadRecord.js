@@ -2,7 +2,6 @@ import recordRequest from "@/api/methods/record";
 import { useRecordStore } from "@/store/recordStore";
 import { useUserStore } from "@/store/userStore";
 
-
 export const saveUnUploadRecords = async () => {
   const recordStore = useRecordStore();
   const userStore = useUserStore();
@@ -14,17 +13,14 @@ export const saveUnUploadRecords = async () => {
     return;
   }
 
-  console.log("unUploadRecords", unUploadRecords)
+  console.log("unUploadRecords", unUploadRecords);
 
   for (let i = 0; i < unUploadRecords.length; i++) {
     const record = unUploadRecords[i];
 
     const { data } = await recordRequest.create({
-      event: "p15",
-      duration: record.duration,
-      stepCount: record.stepCount,
-      scramble: record.scramble,
-      solution: record.solution,
+      post: record.post,
+      params: record.params,
     });
 
     if (data.code === 200) {

@@ -80,3 +80,41 @@ export const formatTimestampByformatedDurationInRecord = (formatedDuration) => {
     parseInt(millisecond)
   );
 };
+
+/**
+ * 格式化时间戳为日期字符串(yyyy/mm/dd hh:mm:ss)
+ * @param {*} timestamp 时间戳
+ * @returns {string} 格式化后的日期字符串(yyyy/mm/dd hh:mm:ss)
+ */
+export const formatDataTimeByTimestamp = (timestamp) => {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  const hour = date.getHours();
+  const minute = date.getMinutes();
+  const second = date.getSeconds();
+
+  return `${year}/${month < 10 ? "0" + month : month}/${
+    day < 10 ? "0" + day : day
+  } ${hour < 10 ? "0" + hour : hour}:${minute < 10 ? "0" + minute : minute}:${
+    second < 10 ? "0" + second : second
+  }`;
+}
+
+/**
+ * 格式化时间戳为日期字符串(yyyy/mm/dd)
+ * @param {*} timestamp 时间戳
+ * @returns {string} 格式化后的日期字符串(yyyy/mm/dd)
+ */
+export const formatDataByTimestamp = (timestamp) => {
+  const date = new Date(timestamp);
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  return `${year}/${month < 10 ? "0" + month : month}/${
+    day < 10 ? "0" + day : day
+  }`;
+}

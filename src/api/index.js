@@ -2,9 +2,9 @@ import axios from "axios";
 import { useUserStore } from "@/store/userStore";
 import router from "@/router/index";
 
-// const baseURL = "http://localhost:8080/api";
-// const baseURL = "http://192.168.31.141:8081/api";
-const baseURL = "http://139.9.7.92:8081/api";
+// const baseURL = "http://localhost:8081/api";
+const baseURL = "http://192.168.31.145:8081/api";
+// const baseURL = "http://139.9.7.92:8081/api";
 
 const request = axios.create({
   baseURL,

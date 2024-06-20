@@ -1,11 +1,10 @@
 <template>
   <div>
-    <div :style="{ fontSize: textSize, color: textColor }">{{ title }}</div>
+    <n-el :style="{ fontSize: textSize, color: textColor }">{{ title }}</n-el>
   </div>
 </template>
 
 <script setup>
-
 const props = defineProps({
   title: String, //标题
   /**
@@ -14,7 +13,7 @@ const props = defineProps({
    */
   textSize: {
     type: String,
-    default: "26px"
+    default: "26px",
   },
 
   /**
@@ -23,7 +22,7 @@ const props = defineProps({
    */
   textColor: {
     type: String,
-    default: "#000"
-  }
+    default: "var(--neutralTextBase)",
+  },
 });
 </script>

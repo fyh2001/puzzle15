@@ -1,7 +1,7 @@
 <template>
   <div>
-    <div @scroll="handleContainerScroll" h-100vh overflow-auto>
-      <router-view v-slot="{ Component, route }" >
+    <div class="h-100vh overflow-auto">
+      <router-view v-slot="{ Component, route }">
         <transition :name="route.meta.transition || 'fade'" mode="default">
           <component :is="Component" class="w-screen" />
         </transition>
@@ -18,7 +18,11 @@
 </template>
 
 <script setup>
+import { useMessage } from "naive-ui";
+import { onBeforeMount, onBeforeUnmount, onMounted } from "vue";
 import Tabbar from "../../components/Tabbar.vue";
+
+const message = useMessage();
 
 const tabsContent = [
   {
@@ -53,4 +57,18 @@ const handleContainerScroll = (event) => {
   tabbarVisible.value = curScrollTop < oldScrollTop;
   oldScrollTop = curScrollTop;
 };
+
+const initInnerHeight = window.innerHeight;
+onMounted(() => {
+  window.onresize = () => {
+    if(window.innerHeight < initInnerHeight) {
+      tabbarVisible.value = false;
+    } else if(window.innerHeight > initInnerHeight) 
+      tabbarVisible.value = true;
+  };
+});
+
+onBeforeUnmount(() => {
+  window.onresize = null;
+});
 </script>

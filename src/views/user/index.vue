@@ -3,15 +3,17 @@
     <div class="flex justify-between items-center">
       <title-bar title="用户" />
 
-      <dropdown :options="options" :show-divider="userStore.token != ''" @select="selecthHanlder" />
+      <dropdown
+        :options="options"
+        :show-divider="userStore.token != ''"
+        @select="selecthHanlder"
+      />
     </div>
 
-    <div
-      class="relative py-10 mt-4 w-full bg-white rounded-2xl shadow bg-cover overflow-hidden"
+    <n-el
+      class="relative py-10 mt-4 w-full rounded-2xl shadow bg-cover overflow-hidden"
+      style="background: var(--user-card-background-color)"
     >
-      <!-- <div class="absolute inset-0 w-full h-full backdrop-blur-sm" /> -->
-      <!-- <div class="absolute inset-0 w-full h-full bg-black opacity-30 backdrop-blur-sm"/> -->
-
       <!-- 已登录 -->
       <div
         class="relative flex justify-around items-center z-100"
@@ -22,9 +24,15 @@
           <div class="text-center">
             <n-avatar
               class="mb-6 shadow"
-              :size="100"
+              object-fit="cover"
               round
-              src="http://139.9.7.92/puzzle15/user_avator.jpeg"
+              :size="100"
+              :src="
+                userStore.user.avatar !== ''
+                  ? userStore.user.avatar
+                  : defalutAvatar
+              "
+              :fallback-src="defalutAvatar"
             />
             <div class="text-5">{{ userStore.user.nickname }}</div>
           </div>
@@ -73,23 +81,25 @@
               class="mb-6 shadow"
               :size="100"
               round
-              src="http://139.9.7.92/puzzle15/016-woman.svg"
+              :src="defalutAvatar"
+              :fallback-src="defalutAvatar"
             />
             <div class="text-5">点我登录</div>
           </div>
         </transition>
       </div>
-    </div>
+    </n-el>
   </div>
 </template>
 
-<script setup>
+<script setup lang="jsx">
 import TitleBar from "@/components/TitleBar.vue";
 import { useUserStore } from "@/store/userStore";
+import { defalutAvatar } from "@/config/index.js";
 import userRequest from "@/api/methods/user";
 import recordBestSingleRequest from "@/api/methods/recordBestSingle";
-import Dropdown from "../../components/Dropdown.vue";
-import { onMounted } from "vue";
+import Dropdown from "@/components/Dropdown.vue";
+import router from "@/router";
 
 import {
   HealthAndSafetyRound,
@@ -105,14 +115,19 @@ const options = [
   {
     label: "编辑资料",
     key: "editProfile",
-    disabled: true,
+    disabled: false,
     show: userStore.token !== "",
     icon: () => {
-      return h(NIcon, {
-        size: 18,
-        class: "text-indigo-500",
-        component: AccountCircleRound,
-      });
+      return (
+        <n-el class="flex items-center" style="color: var(--primary-color)">
+          <n-icon size="18" component={AccountCircleRound} />
+        </n-el>
+      );
+    },
+    props: {
+      onClick: () => {
+        router.push("/user-edit-profile");
+      },
     },
   },
   {
@@ -121,11 +136,11 @@ const options = [
     disabled: true,
     show: userStore.token !== "",
     icon: () => {
-      return h(NIcon, {
-        size: 18,
-        class: "text-indigo-500",
-        component: HealthAndSafetyRound,
-      });
+      return (
+        <n-el class="flex items-center" style="color: var(--primary-color)">
+          <n-icon size="18" component={HealthAndSafetyRound} />
+        </n-el>
+      );
     },
   },
   {
@@ -134,11 +149,11 @@ const options = [
     // disabled: true,
     show: userStore.token !== "",
     icon: () => {
-      return h(NIcon, {
-        size: 20,
-        class: "text-indigo-500",
-        component: TransitEnterexitRound,
-      });
+      return (
+        <n-el class="flex items-center" style="color: var(--primary-color)">
+          <n-icon size="18" component={TransitEnterexitRound} />
+        </n-el>
+      );
     },
     props: {
       onClick: () => {
@@ -147,9 +162,6 @@ const options = [
           content: "确定退出登录吗？",
           positiveText: "确定",
           negativeText: "取消",
-          positiveButtonProps: {
-            color: "#4f46e5"
-          },
           onPositiveClick: () => {
             localStorage.clear();
             window.$message.success("退出登录成功");

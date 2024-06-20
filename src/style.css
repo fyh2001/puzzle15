@@ -11,7 +11,9 @@
 body {
   min-height: 100vh;
   background: #f0f2f5;
+  display: block;
   overflow-x: hidden;
+  /* 4f46e5 */
 }
 
 /* 兼容ios输入 */
@@ -65,4 +67,8 @@ textarea {
 }
 .slide-right-leave-to {
   transform: translateX(100%);
+}
+
+.test{
+  @apply bg-red-4 bg-blue-4 bg-yellow-4
 }

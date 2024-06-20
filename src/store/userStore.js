@@ -19,19 +19,23 @@ export const useUserStore = defineStore("user", {
   getters: {
     getBestSingleRecord() {
       if (this.userBestSingleRecord) {
-        const duration = formatDurationInRecord(this.userBestSingleRecord.bestSingleDuration);
+        const duration = formatDurationInRecord(
+          this.userBestSingleRecord.bestSingleDuration
+        );
         const stepCount = this.userBestSingleRecord.bestSingleStepCount;
         return {
           ...this.userBestSingleRecord,
           duration,
-          stepCount
+          stepCount,
         };
       }
       return null;
     },
     getBestAverage5Record() {
       if (this.userBestAverage5Record) {
-        const duration = formatDurationInRecord(this.userBestAverage5Record.bestAverageDuration);
+        const duration = formatDurationInRecord(
+          this.userBestAverage5Record.bestAverageDuration
+        );
         return {
           ...this.userBestAverage5Record,
           duration,
@@ -41,7 +45,9 @@ export const useUserStore = defineStore("user", {
     },
     getBestAverage12Record() {
       if (this.userBestAverage12Record) {
-        const duration = formatDurationInRecord(this.userBestAverage12Record.bestAverageDuration);
+        const duration = formatDurationInRecord(
+          this.userBestAverage12Record.bestAverageDuration
+        );
         return {
           ...this.userBestAverage12Record,
           duration,
@@ -58,11 +64,16 @@ export const useUserStore = defineStore("user", {
         };
       }
       return null;
-    }
+    },
   },
   actions: {
     setUser(user) {
       this.user = user;
+    },
+    updateUser(userInfo) {
+      for (const key in userInfo) {
+        this.user[key] = userInfo[key];
+      }
     },
     setUserBestSingleRecord(userBestSingleRecord) {
       this.userBestSingleRecord = userBestSingleRecord;
@@ -78,6 +89,6 @@ export const useUserStore = defineStore("user", {
     },
     setToken(token) {
       this.token = token;
-    }
+    },
   },
 });
